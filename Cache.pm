@@ -27,7 +27,7 @@ use Template::Plugin;
 
 use Cache::FileCache;
 
-$VERSION = '0.10';
+$VERSION = '0.11';
 
 #------------------------------------------------------------------------
 # new(\%options)
@@ -138,6 +138,46 @@ look up simple variable names in the stash, but compound names like
 this in a future version, but it would be hacky and might cause
 problems.
 
+=head1 QUESTIONS
+
+=head2 How is this different from the caching already built into Template Toolkit?
+
+That cache is for caching the template files and the compiled version
+of the templates.  This cache is for caching the actual output from
+running a template.
+
+=head2 Who would benefit from this cache?
+
+There are two situations where this might be useful.  The first is if
+you are using a plugin or object inside your template that does
+something slow, like accessing a database or a disk drive or another
+process.  The DBI plugin, for example.  I don't build my apps this way
+(I use a pipeline model with all the data collected before the
+template is run), but I know some people do.
+
+The other situation is if you have an unusually complex template that
+takes a significant amount of time to run.  Template Toolkit is quite
+fast, so it's uncommon for the actual template processing to take any
+noticeable amount of time, but it is possible in extreme cases.
+
+=head2 Why don't you let users choose which Cache::Cache subclass they want to use?
+
+Because Cache::FileCache is by far the fastest in nearly all cases.
+
+=head2 Will you be offering support for other cache modules?
+
+I could, if there is a demand for it.
+
+=head2 Any "gotchas" I should know about?
+
+If you have a template that produces side effects when run, like
+modifying a database or object, these side effects will not be
+captured and caching will break them.  The cache only caches actual
+template output.
+
+Of course, if you have a template which produces side effects, you are
+a very naughty person and you get what you deserve.
+
 =head1 AUTHORS
 
 Perrin Harkins (perrin@elem.com <mailto:perrin@elem.com>) wrote the
@@ -153,6 +193,6 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Template::Plugin|Template::Plugin>, L<File::Cache|File::Cache>
+L<Template::Plugin|Template::Plugin>, L<Cache::FileCache|Cache::FileCache>
 
 =cut

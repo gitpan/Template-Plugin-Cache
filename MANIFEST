@@ -4,3 +4,4 @@ Makefile.PL
 Cache.pm
 README
 t/cache.t
+META.yml                                 Module meta-data (added by MakeMaker)

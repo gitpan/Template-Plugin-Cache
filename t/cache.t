@@ -16,10 +16,15 @@ use strict;
 use lib qw( ./lib ../blib );
 use Template qw( :status );
 use Template::Test;
+use Cache::FileCache;
 $^W = 1;
 
 $Template::Test::DEBUG = 1;
 $Template::Test::PRESERVE = 1;
+
+# clear cache before beginning
+my $cache = Cache::FileCache->new();
+$cache->Clear();
 
 test_expect(\*DATA, {
   INTERPOLATE => 1,
@@ -35,29 +40,33 @@ test_expect(\*DATA, {
 __DATA__
 [% USE cache = Cache %]
 [% BLOCK cache_me %]
- Hello
+Hello
+[% SET change_me = 'after' %]
 [% END %]
+[% SET change_me = 'before' %]
 [% cache.proc(
              'template' => 'cache_me',
              'ttl' => 15
              ) %]
-
+[% change_me %]
 -- expect --
- Hello
-
+Hello
+after
 -- test --
 [% USE cache = Cache %]
 [% BLOCK cache_me %]
- Hello
+Hello
+[% SET change_me = 'after' %]
 [% END %]
+[% SET change_me = 'before' %]
 [% cache.inc(
              'template' => 'cache_me',
              'ttl' => 15
              ) %]
-
+[% change_me %]
 -- expect --
- Hello
-
+Hello
+before
 -- test --
 [% USE cache = Cache %]
 [% BLOCK cache_me %]

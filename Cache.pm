@@ -27,7 +27,7 @@ use Template::Plugin;
 
 use Cache::FileCache;
 
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 #------------------------------------------------------------------------
 # new(\%options)
@@ -59,7 +59,7 @@ sub inc {
 
 sub proc {
     my ($self, $params) = @_;
-    $self->_cached_action('include', $params);
+    $self->_cached_action('process', $params);
 }
 
 sub _cached_action {

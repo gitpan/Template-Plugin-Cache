@@ -2,13 +2,23 @@ NAME
     Template::Plugin::Cache - cache output of templates
 
 SYNOPSIS
-      [% USE cache = Cache%]
+      [% USE cache = Cache %]
     
       [% cache.inc(
                    'template' => 'slow.html',
                    'keys' => {'user.name' => user.name},
                    'ttl' => 360
                    ) %]
+           
+      # or with a pre-defined Cache::* object and key
+  
+      [% USE cache = Cache( cache => mycache ) %]
+  
+      [% cache.inc(
+               'template' => 'slow.html',
+               'key'      => mykey,
+               'ttl'      => 360
+               )  %]
 
 DESCRIPTION
     The Cache plugin allows you to cache generated output from a template.
@@ -17,9 +27,14 @@ DESCRIPTION
         [% USE cache = Cache %]
 
     This creates a plugin object with the name 'cache'. You may also specify
-    parameters for the File::Cache module, which is used for storage.
+    parameters for the default Cache module (Cache::FileCache), which is
+    used for storage.
 
         [% USE mycache = Cache(namespace => 'MyCache') %]
+    
+    Or use your own Cache object:
+
+        [% USE mycache = Cache(cache => mycacheobj) %]
 
     The only methods currently available are include and process,
     abbreviated to "inc" and "proc" to avoid clashing with built-in
@@ -44,6 +59,14 @@ DESCRIPTION
     up simple variable names in the stash, but compound names like
     "user.name" are hard to resolve at runtime. I may attempt to fake this
     in a future version, but it would be hacky and might cause problems.
+
+    You may also use your own key value:
+
+      [% cache.inc(
+                   'template' => 'slow.html',
+                   'key'      => yourkey,
+                   'ttl'      => 360
+                   ) %]
 
 QUESTIONS
   How is this different from the caching already built into Template Toolkit?
@@ -83,6 +106,9 @@ AUTHORS
     Perrin Harkins (perrin@elem.com <mailto:perrin@elem.com>) wrote the
     first version of this plugin, with help and suggestions from various
     parties.
+
+    Peter Karman <peter@peknet.com> provided a patch to accept an existing
+    cache object.
 
 COPYRIGHT
     Copyright (C) 2001 Perrin Harkins.

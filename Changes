@@ -11,3 +11,7 @@ Revision history for Perl module Template::Plugin::Cache:
             thanks to <alex@slab.org>
         - Improved tests to clear cache each time and check for
             difference between include and process
+
+0.13 Sun Jun 10, 2007
+        - Add support for using an existing cache object
+           (Peter Karman <peter@peknet.com>)

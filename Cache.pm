@@ -1,23 +1,3 @@
-#============================================================= -*-Perl-*-
-#
-# Template::Plugin::Cache
-#
-# DESCRIPTION
-#
-#   Plugin to cache template output
-#
-# AUTHORS
-#   Perrin Harkins           <perrin@elem.com <mailto:perrin@elem.com>>
-#   (your name could be here)
-#
-# COPYRIGHT
-#   Copyright (C) 2001 Perrin Harkins.
-#
-#   This module is free software; you can redistribute it and/or
-#   modify it under the same terms as Perl itself.
-#
-#============================================================================
-
 package Template::Plugin::Cache;
 
 use strict;
@@ -25,22 +5,27 @@ use vars qw( $VERSION );
 use base qw( Template::Plugin );
 use Template::Plugin;
 
-use Cache::FileCache;
-
-$VERSION = '0.12';
+$VERSION = '0.13';
 
 #------------------------------------------------------------------------
 # new(\%options)
 #------------------------------------------------------------------------
 
 sub new {
-    my ($class, $context, $params) = @_;
-    my $cache = Cache::FileCache->new($params);
+    my ( $class, $context, $params ) = @_;
+    my $cache;
+    if ( $params->{cache} ) {
+        $cache = delete $params->{cache};
+    }
+    else {
+        require Cache::FileCache;
+        $cache = Cache::FileCache->new($params);
+    }
     my $self = bless {
-		      CACHE   => $cache,
-		      CONFIG  => $params,
-		      CONTEXT => $context,
-		     }, $class;
+        CACHE   => $cache,
+        CONFIG  => $params,
+        CONTEXT => $context,
+    }, $class;
     return $self;
 }
 
@@ -53,29 +38,35 @@ sub new {
 #------------------------------------------------------------------------
 
 sub inc {
-    my ($self, $params) = @_;
-    $self->_cached_action('include', $params);
+    my ( $self, $params ) = @_;
+    $self->_cached_action( 'include', $params );
 }
 
 sub proc {
-    my ($self, $params) = @_;
-    $self->_cached_action('process', $params);
+    my ( $self, $params ) = @_;
+    $self->_cached_action( 'process', $params );
 }
 
 sub _cached_action {
-    my ($self, $action, $params) = @_;
-    my $cache_keys = $params->{keys};
-    my $key = join(
-		   ':',
-		   (
-		    $params->{template},
-		    map { "$_=$cache_keys->{$_}" } keys %{$cache_keys}
-		   )
-		  );
+    my ( $self, $action, $params ) = @_;
+    my $key;
+    if ( $params->{key} ) {
+        $key = delete $params->{key};
+    }
+    else {
+        my $cache_keys = $params->{keys};
+        $key = join(
+            ':',
+            (
+                $params->{template},
+                map { "$_=$cache_keys->{$_}" } keys %{$cache_keys}
+            )
+        );
+    }
     my $result = $self->{CACHE}->get($key);
-    if (!$result) {
-      $result = $self->{CONTEXT}->$action($params->{template});
-      $self->{CACHE}->set($key, $result, $params->{ttl});
+    if ( !$result ) {
+        $result = $self->{CONTEXT}->$action( $params->{template} );
+        $self->{CACHE}->set( $key, $result, $params->{ttl} );
     }
     return $result;
 }
@@ -90,7 +81,7 @@ Template::Plugin::Cache - cache output of templates
 
 =head1 SYNOPSIS
 
-  [% USE cache = Cache%]
+  [% USE cache = Cache %]
     
 
   [% cache.inc(
@@ -98,6 +89,16 @@ Template::Plugin::Cache - cache output of templates
 	       'keys' => {'user.name' => user.name},
 	       'ttl' => 360
 	       ) %]
+           
+  # or with a pre-defined Cache::* object and key
+  
+  [% USE cache = Cache( cache => mycache ) %]
+  
+  [% cache.inc(
+           'template' => 'slow.html',
+           'key'      => mykey,
+           'ttl'      => 360
+           )  %]
 
 =head1 DESCRIPTION
 
@@ -107,10 +108,14 @@ You load the plugin with the standard syntax:
     [% USE cache = Cache %]
 
 This creates a plugin object with the name 'cache'.  You may also
-specify parameters for the File::Cache module, which is used for
-storage.
+specify parameters for the default Cache module (Cache::FileCache),
+which is used for storage.
 
     [% USE mycache = Cache(namespace => 'MyCache') %]
+    
+Or use your own Cache object:
+
+    [% USE mycache = Cache(cache => mycacheobj) %]
 
 The only methods currently available are include and process,
 abbreviated to "inc" and "proc" to avoid clashing with built-in
@@ -137,6 +142,14 @@ look up simple variable names in the stash, but compound names like
 "user.name" are hard to resolve at runtime.  I may attempt to fake
 this in a future version, but it would be hacky and might cause
 problems.
+
+You may also use your own key value:
+
+  [% cache.inc(
+	       'template' => 'slow.html',
+	       'key'      => yourkey,
+	       'ttl'      => 360
+	       ) %]
 
 =head1 QUESTIONS
 
@@ -183,6 +196,8 @@ a very naughty person and you get what you deserve.
 Perrin Harkins (perrin@elem.com <mailto:perrin@elem.com>) wrote the
 first version of this plugin, with help and suggestions from various
 parties.
+
+Peter Karman <peter@peknet.com> provided a patch to accept an existing cache object.
 
 =head1 COPYRIGHT
 
